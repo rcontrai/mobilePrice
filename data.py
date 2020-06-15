@@ -5,6 +5,7 @@ provides tools for loading, preprocessing, visualizing the data
 
 from pandas.io.parsers import read_csv
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 #%% loading
@@ -37,11 +38,14 @@ def normalizar(X):
 
 def scatterPlot(X,Y,features=(0,1)):
     """
-    Plots two features of the dataset in a scatter plot
+    Plots 2 or 3 features of the dataset in a scatter plot
     input: 
       X : the array containing vectorized examples in its rows
       Y : the array containing the class of each example
-      features : a tuple giving the indices of the two features to display
+      features : a tuple giving the indices of the features to display
+                 it can have length 2 or 3
+                 a length of 2 will result in a 2d plot
+                 a length of 3 will result in a 3d plot
                  default value = (0,1)
     returns:
         a matplotlib.Figure object containing the scatter plot
@@ -52,10 +56,21 @@ def scatterPlot(X,Y,features=(0,1)):
     class1 = np.where(Y == 1)
     class2 = np.where(Y == 2)
     class3 = np.where(Y == 3)
-    plt.scatter(X[class0, f1],X[class0, f2], marker='+', c='r', label = 'range 0')
-    plt.scatter(X[class1, f1], X[class1, f2], marker='+', c='g', label = 'range 1')
-    plt.scatter(X[class2, f1],X[class2, f2], marker='+', c='b', label = 'range 2')
-    plt.scatter(X[class3, f1], X[class3, f2], marker='+', c='y', label = 'range 3')
+    if (len(features) == 3):
+        #3D scatter plot
+        ax = Axes3D(fig)
+        f3 = features[2]
+        ax.set_zlabel('feature #' + str(3))
+        ax.scatter(X[class0, f1],X[class0, f2], X[class0, f3], marker='+', c='r', label = 'range 0')
+        ax.scatter(X[class1, f1], X[class1, f2], X[class1, f3], marker='+', c='g', label = 'range 1')
+        ax.scatter(X[class2, f1],X[class2, f2], X[class2, f3], marker='+', c='b', label = 'range 2')
+        ax.scatter(X[class3, f1], X[class3, f2], X[class3, f3], marker='+', c='y', label = 'range 3')
+    else:
+        #2D scatter plot
+        plt.scatter(X[class0, f1],X[class0, f2], marker='+', c='r', label = 'range 0')
+        plt.scatter(X[class1, f1], X[class1, f2], marker='+', c='g', label = 'range 1')
+        plt.scatter(X[class2, f1],X[class2, f2], marker='+', c='b', label = 'range 2')
+        plt.scatter(X[class3, f1], X[class3, f2], marker='+', c='y', label = 'range 3')
     plt.legend()
     plt.xlabel('feature #' + str(f1))
     plt.ylabel('feature #' + str(f2))
