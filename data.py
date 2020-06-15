@@ -60,7 +60,7 @@ def scatterPlot(X,Y,features=(0,1)):
         #3D scatter plot
         ax = Axes3D(fig)
         f3 = features[2]
-        ax.set_zlabel('feature #' + str(3))
+        ax.set_zlabel('feature #' + str(f3))
         ax.scatter(X[class0, f1],X[class0, f2], X[class0, f3], marker='+', c='r', label = 'range 0')
         ax.scatter(X[class1, f1], X[class1, f2], X[class1, f3], marker='+', c='g', label = 'range 1')
         ax.scatter(X[class2, f1],X[class2, f2], X[class2, f3], marker='+', c='b', label = 'range 2')
