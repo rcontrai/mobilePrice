@@ -34,6 +34,23 @@ def normalizar(X):
     X_norm = (X - mu) / sigma
     return X_norm, mu, sigma
 
+def pca(X):
+    """
+    performs principal component analysis (PCA) on the dataset
+    input :
+        X : the array containing vectorized examples in its rows,
+            normalized
+    returns :
+        U : the matrix of eigenvectors of the covariance matrix,
+            containing eigenvectors in its columns ordered by eigenvalue
+        S : an array containing the eigenvalues associated with the eigenvectors
+    """
+    m = np.shape(X)[0]
+    sigma = (1/m) * np.transpose(X).dot(X) #covariance matrix
+    U,S,_ = np.linalg.svd(sigma) #singular value decomposition
+    return U,S
+    
+
 #%% visualization
 
 def scatterPlot(X,Y,features=(0,1)):
