@@ -7,7 +7,7 @@ Coursework 3: Multi-class logistical regression and neural networks
 Imports and definitions
 """
 
-from data import carga_csv, polynomial
+from data import carga_csv, polynomial,accuracy,f1score_multi
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
@@ -47,16 +47,12 @@ def gradiente_reg(theta, X, Y, lamb):
     reg = (lamb/m)*reg*theta
     return G + reg
 
-def precision(theta,X,Y):
+def predict(theta,Xtest):
     """
-    accuracy function
-    computes the accuracy of the logistic model theta on X with true target variable Y
+    computes the prediction for the model theta and examples Xtest
     """
-    m = np.shape(X)[0]
-    H = sigmoid(np.dot(X,theta.T))
-    labels = np.argmax(H,axis = 1)
-    Y = Y.ravel()
-    return np.sum(labels == Y)/m
+    H = sigmoid(np.dot(Xtest,theta.T))
+    return np.argmax(H,axis = 1)
 
 
 def oneVsAll(X,y,num_etiquetas,reg):
@@ -90,7 +86,7 @@ def oneVsAll(X,y,num_etiquetas,reg):
 
 #%% 
 """
-1 - Multi-class logistical regression (lambda = 0, 0.815)
+1 - Multi-class logistical regression 
 """
 
 # loading the data
@@ -101,8 +97,8 @@ np.random.shuffle(data)
 
 # Dividing the set into training, validation and test sets
 m = np.shape(data)[0]
-train = int(np.floor(0.8*m))
-val = int(train + np.floor(0.1*m))
+train = int(np.floor(0.6*m))
+val = int(train + np.floor(0.3*m))
 
 Xtrain = data[0:train,:-1]
 ytrain = data[0:train,-1]
@@ -125,8 +121,10 @@ Th = oneVsAll(Xtrainp,ytrain,K,reg)
 # Computing precision
 
 Xtestp = np.hstack([np.ones([mtest,1]),Xtest])
-p = precision(Th,Xtestp,ytest)
-print('Logistical model accuracy : {0:1.3g}'.format(p))
+pred = predict(Th,Xtestp)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('Logistical model accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
 
 #%%
 """
@@ -144,9 +142,14 @@ for i in range(1,int(mtrain/batch)):
     yi = ytrain[0:i*batch]
     
     Th = oneVsAll(Xi,yi,K,reg)
+    
+    pred = predict(Th,Xi)
+    prec[i-1] = 1 - f1score_multi(pred,yi,K)
+    # prec[i-1] = 1 - accuracy(pred,ytest)
         
-    prec[i-1] = 1-precision(Th,Xi,yi)
-    precval[i-1] = 1-precision(Th,Xvalp,yval)
+    pred = predict(Th,Xvalp)
+    precval[i-1] = 1 - f1score_multi(pred,yval,K)
+    # precval[i-1] = 1 - accuracy(pred,yval)
     
 
 # Display the learning curves
@@ -169,7 +172,8 @@ plt.show()
 # and compute its error on the training set and on the
 # validation set
 
-lamb_arr = range(0,1000,10)
+step = 10;
+lamb_arr = range(0,1000,step)
 lpts = np.size(lamb_arr)
 
 prec = np.zeros(lpts,)
@@ -179,9 +183,14 @@ i = 0;
 for lamb in lamb_arr:
 
     Th = oneVsAll(Xtrainp,ytrain,K,lamb)
-        
-    prec[i] = 1-precision(Th,Xtrainp,ytrain)
-    precval[i] = 1-precision(Th,Xvalp,yval)
+       
+    pred = predict(Th,Xi)
+    prec[i-1] = 1 - f1score_multi(pred,yi,K)
+    # prec[i-1] = 1 - accuracy(pred,ytest)
+    
+    pred = predict(Th,Xvalp)
+    precval[i-1] = 1 - f1score_multi(pred,yval,K)
+    # precval[i-1] = 1 - accuracy(pred,yval)
     i = i+1;
     
 # Display the learning curves
@@ -194,15 +203,17 @@ plt.ylabel('Error')
 plt.title(r'Selecting $\lambda$ using a cross-validation set')
 plt.show()
 
-print('Best lambda = : {}'.format(np.argmin(precval) * 10))
+bestlamb = np.argmin(precval)*step
+
+print('Best lambda = : {}'.format(np.argmin(precval) * step))
 
 
 #%%
 """
-4 - Model with lambda = 810 (0.885)
+4 - Model with best lambda
 """
 K = 4  # number of classes
-reg = 810 # regularization factor
+reg = bestlamb# regularization factor
 
 # Training the models
 Th = oneVsAll(Xtrainp,ytrain,K,reg)
@@ -210,8 +221,10 @@ Th = oneVsAll(Xtrainp,ytrain,K,reg)
 # Computing precision
 
 Xtestp = np.hstack([np.ones([mtest,1]),Xtest])
-p = precision(Th,Xtestp,ytest)
-print('Logistical model accuracy : {0:1.3g}'.format(p))
+pred = predict(Th,Xtestp)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('Logistical model accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
 
 
 batch = 10;
@@ -224,8 +237,13 @@ for i in range(1,int(mtrain/batch)):
     
     Th = oneVsAll(Xi,yi,K,reg)
         
-    prec[i-1] = 1-precision(Th,Xi,yi)
-    precval[i-1] = 1-precision(Th,Xvalp,yval)
+    pred = predict(Th,Xi)
+    prec[i-1] = 1 - f1score_multi(pred,yi,K)
+    # prec[i-1] = 1 - accuracy(pred,ytest)
+        
+    pred = predict(Th,Xvalp)
+    precval[i-1] = 1 - f1score_multi(pred,yval,K)
+    # precval[i-1] = 1 - accuracy(pred,yval)
     
 
 # Display the learning curves
@@ -262,9 +280,14 @@ for i in range(1,int(mtrain/batch)):
     
     Th = oneVsAll(Xi,yi,K,reg)
     
-    
-    prec[i-1] = 1-precision(Th,Xi,yi)
-    precval[i-1] = 1-precision(Th,Xval_pol,yval)
+    pred = predict(Th,Xi)
+    prec[i-1] = 1 - f1score_multi(pred,yi,K)
+    # prec[i-1] = 1 - accuracy(pred,ytest)
+    if i == 3:
+        a = 1
+    pred = predict(Th,Xval_pol)
+    precval[i-1] = 1 - f1score_multi(pred,yval,K)
+    # precval[i-1] = 1 - accuracy(pred,yval)
     
 
 # Display the learning curves
@@ -281,5 +304,7 @@ plt.show()
 
 Xtest_pol, _, _ = polynomial(Xtest,d)
 Xtest_pol[:,1:] = (Xtest_pol[:,1:] - mu) / sigma
-p = precision(Th,Xtest_pol,ytest)
-print('Logistical model accuracy : {0:1.3g}'.format(p))
+pred = predict(Th,Xtest_pol)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('Logistical model accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
