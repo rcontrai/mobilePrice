@@ -105,3 +105,42 @@ def scatterPlot(X,Y,features=(0,1)):
     plt.ylabel('feature #' + str(f2))
     return fig
 
+#%% precision
+ 
+def accuracy(prediction,ytest):  
+    """
+    Computes the usual accuracy of a multiclass prediction by given the 
+    predictions it makes on a set
+    and the true values on that set
+    """
+    m = np.shape(ytest)[0]
+    return np.sum(prediction == ytest)/m
+
+def f1score_multi(prediction,ytest,K):
+    """
+    Computes the f1 score of a multiclass prediction by doing the average of 
+    the f1 scores given the predictions (as binary labels) it makes on a set
+    and the true values on that set
+    """
+    m = np.shape(ytest)[0]
+    f1sum = 0
+    for k in range(K):
+        
+        labels = np.zeros((m,1))
+        labels[ytest == k] = 1  # the class at index 0 has value 1
+        labels = labels.ravel()
+        
+        pred = np.zeros((m,1))
+        pred[prediction == k] = 1
+        pred = pred.ravel()
+        
+        truepos = np.sum(labels[pred == 1])
+        predpos = np.sum(pred)
+        actpos = np.sum(labels)
+        if predpos != 0 and actpos != 0:
+            precision = truepos/predpos
+            recall = truepos/actpos
+            if precision != 0 and recall != 0:
+                f1sum = f1sum + 2*precision*recall/(precision + recall)
+        
+    return f1sum/K
