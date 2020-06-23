@@ -5,6 +5,7 @@ provides tools for loading, preprocessing, visualizing the data
 
 from pandas.io.parsers import read_csv
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import PolynomialFeatures
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
@@ -49,6 +50,17 @@ def pca(X):
     sigma = (1/m) * np.transpose(X).dot(X) #covariance matrix
     U,S,_ = np.linalg.svd(sigma) #singular value decomposition
     return U,S
+
+
+def polynomial(X,grad):
+    """
+    Computes each power of X's values from 0 to grad
+    and then normalizes them.
+    """
+    poly = PolynomialFeatures(grad)
+    X_pol = poly.fit_transform(X)
+    X_pol[:,1:], mu, sigma = normalizar(X_pol[:,1:])
+    return X_pol, mu, sigma
     
 
 #%% visualization and metrics
