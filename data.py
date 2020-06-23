@@ -63,7 +63,7 @@ def polynomial(X,grad):
     return X_pol, mu, sigma
     
 
-#%% visualization
+#%% visualization and metrics
 
 def scatterPlot(X,Y,features=(0,1)):
     """
@@ -105,6 +105,19 @@ def scatterPlot(X,Y,features=(0,1)):
     plt.ylabel('feature #' + str(f2))
     return fig
 
+def proportions(Y):
+    """
+    Gives the proportion of each class in a dataset.
+    input: 
+      Y : array containing the class of each example in the dataset
+    """
+    m = np.shape(Y)[0]
+    res = np.zeros(4)
+    for i in range(4):
+        res[i] = np.sum(Y == i)/m
+    return res
+
+
 #%% precision
  
 def accuracy(prediction,ytest):  
@@ -144,3 +157,6 @@ def f1score_multi(prediction,ytest,K):
                 f1sum = f1sum + 2*precision*recall/(precision + recall)
         
     return f1sum/K
+
+
+
