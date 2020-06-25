@@ -142,14 +142,16 @@ reg = 0 # regularization factor
 # Plot learning curve.
 batch = 10;
 fit = lambda x,y: ML.fit(x,y,K,reg)
-learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for logistic regression, no regularization')
+fig.show()
 
 # Computing precision
 ML.fit(Xtrain,ytrain,K,reg)
 pred = ML.predict(Xtest)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('Logistical model accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
+print('Logistical model without regularization accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
 
 #%%
 """
@@ -203,7 +205,9 @@ reg = bestlamb # regularization factor
 # Learning curve
 fit = lambda x,y: ML.fit(x,y,K,reg)
 batch = 10
-learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for logistic regression with lambda = ' + str(reg))
+fig.show()
 
 
 # Computing precision
@@ -215,7 +219,7 @@ print('Logistical model accuracy with single split lambda = {0}: {1:1.3g}, F1: {
 
 #%%
 """
-3B - Choose lambda with kfolds
+3B - Choose lambda with k-fold crossvalidation
 """
 
 
@@ -261,7 +265,9 @@ reg = bestlambkfolds # regularization factor
 # Learning curve
 fit = lambda x,y: ML.fit(x,y,K,reg)
 batch = 10
-learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for logistic regression with lambda = ' + str(reg))
+fig.show()
 
 
 # Computing precision
@@ -298,7 +304,9 @@ Xtest_pol = (Xtest_pol - mu) / sigma
 
 # Learning curve
 fit = lambda x,y: ML.fit(x,y,K,reg)
-learningcurve(Xt_notval_pol,yt_notval,Xt_val_pol,yt_val,fit,predict,error,batch)
+fig = learningcurve(Xt_notval_pol,yt_notval,Xt_val_pol,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for logistic regression with polynomial features')
+fig.show()
 
 
 # Computing precision
@@ -306,4 +314,4 @@ ML.fit(Xtrain_pol,ytrain,K,reg)
 pred = ML.predict(Xtest_pol)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('Logistical model accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
+print('Logistical model with plynomial features accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))

@@ -138,14 +138,13 @@ def learningcurve(Xtrain,ytrain,Xval,yval,fit,predict,error,batch):
         
     
     # Display the learning curves
-    plt.figure()
+    fig = plt.figure()
     plt.plot(err, label = "Train")
     plt.plot(errval, label = "Cross validation")
     plt.legend()
     plt.xlabel('Iterations')
     plt.ylabel('Error')
-    plt.title('Learning curve for logistic regression')
-    plt.show()
+    return fig
 
 #%% paramter tunning
 
