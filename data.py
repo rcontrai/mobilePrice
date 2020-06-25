@@ -6,6 +6,7 @@ provides tools for loading, preprocessing, visualizing the data
 from pandas.io.parsers import read_csv
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import KFold
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
@@ -117,8 +118,60 @@ def proportions(Y):
         res[i] = np.sum(Y == i)/m
     return res
 
+def learningcurve(Xtrain,ytrain,Xval,yval,fit,predict,error,batch):
+    
+    mtrain = np.shape(Xtrain)[0]
+    
+    err = np.zeros(int(mtrain/batch)-1,)
+    errval = np.zeros(int(mtrain/batch)-1,)
+    
+    for i in range(1,int(mtrain/batch)):
+        Xi = Xtrain[0:i*batch]
+        yi = ytrain[0:i*batch]
+        
+        fit(Xi,yi)
+        pred = predict(Xi)
+        err[i-1] = error(pred,yi)
+            
+        pred = predict(Xval)
+        errval[i-1] = error(pred,yval)
+        
+    
+    # Display the learning curves
+    plt.figure()
+    plt.plot(err, label = "Train")
+    plt.plot(errval, label = "Cross validation")
+    plt.legend()
+    plt.xlabel('Iterations')
+    plt.ylabel('Error')
+    plt.title('Learning curve for logistic regression')
+    plt.show()
 
-#%% precision
+#%% paramter tunning
+
+def kfolds(X,y,fit,predict,error,k):
+    """
+    Computes the precision given by error using the k-folds crossvalidation on X
+    and using the function fit to train and predict to do predictions
+    """
+    kf = KFold(n_splits = k)
+    err = 0
+    errval = 0
+    for train_index, val_index in kf.split(X):                             
+        X_train, X_val = X[train_index], X[val_index]
+        y_train, y_val = y[train_index], y[val_index]
+        
+        fit(X_train,y_train)
+        
+        pred = predict(X_train)
+        err = err + error(pred,y_train)
+        
+        pred = predict(X_val)
+        errval = errval + error(pred,y_val)
+        
+    return err/k,errval/k
+
+#%% precision measures
  
 def accuracy(prediction,ytest):  
     """
@@ -158,5 +211,4 @@ def f1score_multi(prediction,ytest,K):
         
     return f1sum/K
 
-
-
+        
