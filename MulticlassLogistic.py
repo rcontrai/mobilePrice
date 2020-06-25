@@ -144,6 +144,7 @@ batch = 10;
 fit = lambda x,y: ML.fit(x,y,K,reg)
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for logistic regression, no regularization')
+plt.ylim(-0.02,0.62)
 fig.show()
 
 # Computing precision
@@ -188,6 +189,7 @@ plt.plot(lamb_arr, precval, label = "Validation")
 plt.legend()
 plt.xlabel('$\lambda$')
 plt.ylabel('Error') 
+plt.ylim(0.099,0.179)
 plt.title(r'Selecting $\lambda$ using a validation set')
 plt.show()
 
@@ -206,6 +208,7 @@ reg = bestlamb # regularization factor
 fit = lambda x,y: ML.fit(x,y,K,reg)
 batch = 10
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.ylim(-0.02,0.62)
 plt.title('Learning curve for logistic regression with lambda = ' + str(reg))
 fig.show()
 
@@ -247,6 +250,7 @@ plt.plot(lamb_arr, precval, label = "Average validation")
 plt.legend()
 plt.xlabel('$\lambda$')
 plt.ylabel('Error') 
+plt.ylim(0.099,0.179)
 plt.title(r'Selecting $\lambda$ using k-folds')
 plt.show()
 
@@ -266,6 +270,7 @@ reg = bestlambkfolds # regularization factor
 fit = lambda x,y: ML.fit(x,y,K,reg)
 batch = 10
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.ylim(-0.02,0.62)
 plt.title('Learning curve for logistic regression with lambda = ' + str(reg))
 fig.show()
 
