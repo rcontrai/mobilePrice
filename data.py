@@ -140,7 +140,7 @@ def learningcurve(Xtrain,ytrain,Xval,yval,fit,predict,error,batch):
     # Display the learning curves
     fig = plt.figure()
     plt.plot(err, label = "Train")
-    plt.plot(errval, label = "Cross validation")
+    plt.plot(errval, label = "Validation")
     plt.legend()
     plt.xlabel('Iterations')
     plt.ylabel('Error')
