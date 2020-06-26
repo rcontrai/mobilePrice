@@ -42,6 +42,8 @@ yt_val = datatrain[split::,-1]
 
 
 # Lambdas needed
+fit = lambda x,y: svm.fit(x,y)
+predict = lambda x: svm.predict(x)
 error = lambda p,y: 1 - f1score_multi(p,y,K)
 
 #%%
@@ -54,8 +56,6 @@ svm = SVC(kernel='linear', C=C)
 
 # Plot learning curve.
 batch = 100;
-fit = lambda x,y: svm.fit(x,y)
-predict = lambda x: svm.predict(x)
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for linear SVM, no regularization')
 fig.show()
@@ -119,8 +119,6 @@ svm = SVC(kernel='linear', C=C)
 
 # Learning curve
 batch = 100;
-fit = lambda x,y: svm.fit(x,y)
-predict = lambda x: svm.predict(x)
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Linear SVM with C = ' + str(C))
 fig.show()
@@ -140,7 +138,6 @@ print('Linear SVM accuracy with single split C = {0}: {1:1.3g}, F1: {2:1.3g}'.fo
 
 
 k = 5; # number of folds
-step = 10;
 C_arr = [0.1, 0.5, 1, 5, 10, 100, 1000, 5000, 10000]
 lpts = np.size(C_arr)
 
@@ -151,7 +148,6 @@ i = 0;
 for C in C_arr:
     
     svm = SVC(kernel='linear', C=C)
-    fit = lambda x,y: svm.fit(x,y)
     
     prec[i],precval[i] = kfolds(Xtrain,ytrain,fit,predict,error,k)
     i = i +1;
@@ -182,8 +178,6 @@ svm = SVC(kernel='linear', C=C)
 
 # Learning curve
 batch = 100;
-fit = lambda x,y: svm.fit(x,y)
-predict = lambda x: svm.predict(x)
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Linear SVM with C = ' + str(C))
 fig.show()
@@ -211,8 +205,6 @@ svm = SVC(kernel=kernel, C=C, gamma = gamma)
 
 # Plot learning curve.
 batch = 100;
-fit = lambda x,y: svm.fit(x,y)
-predict = lambda x: svm.predict(x)
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for SVM with kernel ' + str(kernel) +
           ' with parameters C = ' + str(C) + ' and gamma = ' + str(gamma))
