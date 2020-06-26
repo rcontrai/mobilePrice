@@ -7,124 +7,222 @@ Coursework 6: Support Vector Machines
 Imports and definitions
 """
 
-from data import carga_csv,accuracy,f1score_multi
+from data import carga_csv, accuracy,f1score_multi, kfolds, learningcurve
 import numpy as np
 from sklearn.svm import SVC
+import matplotlib.pyplot as plt
 
-    
-#%%
+#%% 
 """
-1 - Support vector machine
+1 - Load data
 """
-
-
-# loading the data
-data = carga_csv("data/train.csv")
-
-np.random.seed(0) # To get consistent results while debugging
-np.random.shuffle(data)
-
-# Dividing the set into training, validation and test sets
-m = np.shape(data)[0]
-train = int(np.floor(0.6*m))
-val = int(train + np.floor(0.3*m))
-
-Xtrain = data[0:train,:-1]
-ytrain = data[0:train,-1]
-Xval = data[train:val,:-1]
-yval = data[train:val,-1]
-Xtest = data[val::,:-1]
-ytest = data[val::,-1]
-
-mtrain = np.shape(Xtrain)[0]
-mval = np.shape(Xval)[0]
-mtest = np.shape(Xtest)[0]
 
 K = 4  # number of classes
-C = 100.
+# loading the data
+datatrain = carga_csv("data/train.csv")
+datatest = carga_csv("data/test.csv")
 
-# Trainig the model with a linear kernel
+Xtrain = datatrain[:,:-1]
+ytrain = datatrain[:,-1]
+Xtest = datatest[:,:-1]
+ytest = datatest[:,-1]
+
+mtrain = np.shape(Xtrain)[0]
+mtest = np.shape(Xtest)[0]
+
+# Split into training and validation set
+np.random.seed(0) # To get consistent results while debugging
+np.random.shuffle(datatrain)
+split = int(np.floor(0.7*mtrain))
+
+Xt_notval = datatrain[0:split,:-1]
+yt_notval = datatrain[0:split,-1]
+Xt_val = datatrain[split::,:-1]
+yt_val = datatrain[split::,-1]
+
+
+# Lambdas needed
+error = lambda p,y: 1 - f1score_multi(p,y,K)
+
+#%%
+"""
+2 - Linear SVM 
+"""
+
+C = 1 # regularization factor
 svm = SVC(kernel='linear', C=C)
-svm.fit(Xtrain,ytrain)
 
+# Plot learning curve.
+batch = 100;
+fit = lambda x,y: svm.fit(x,y)
+predict = lambda x: svm.predict(x)
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for linear SVM, no regularization')
+fig.show()
+
+# Computing precision
+svm.fit(Xtrain,ytrain)
 pred = svm.predict(Xtest)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('SVM linear with C = {0}. Accuracy: {1:1.3g}, F1: {2:1.3g}'.format(C,e,f1))
+print('Linear SVM without regularization accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
 
-sigma = 0.1
+#%%
+"""
+3A - Linear - Choose C with single split
+"""
 
-svm = SVC(kernel='rbf', C=C, gamma = 1/(2*sigma**2))
+# Train the model for a range of values of lambda
+# and compute its error on the training set and on the
+# validation set
+
+C_arr = [0.1, 0.5, 1, 10, 100, 1000, 5000, 10000]
+lpts = np.size(C_arr)
+
+prec = np.zeros(lpts,)
+precval = np.zeros(lpts,)
+
+i = 0;
+for C in C_arr:
+    
+    svm = SVC(kernel='linear', C=C)
+    svm.fit(Xt_notval,yt_notval)
+       
+    pred = svm.predict(Xt_notval)
+    prec[i-1] = error(pred,yt_notval)
+    
+    pred = svm.predict(Xt_val)
+    precval[i-1] = error(pred,yt_val)
+    i = i+1;
+    
+# Display the lambda curve
+plt.figure()
+plt.plot(C_arr, prec, label = "Train", alpha = 0.5)
+plt.plot(C_arr, precval, label = "Validation")
+plt.legend()
+plt.xlabel('$C$')
+plt.ylabel('Error') 
+plt.title(r'Selecting $C$ using a validation set')
+plt.show()
+
+bestC = C_arr[np.argmin(precval)]
+
+print('Best C with single split = : {}'.format(bestC))
+
+#%%
+"""
+4A - Linear - Model with best C with single split
+"""
+
+C = bestC # regularization factor
+svm = SVC(kernel='linear', C=C)
+
+# Learning curve
+batch = 100;
+fit = lambda x,y: svm.fit(x,y)
+predict = lambda x: svm.predict(x)
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Linear SVM with C = ' + str(C))
+fig.show()
+
+
+# Computing precision
 svm.fit(Xtrain,ytrain)
-
 pred = svm.predict(Xtest)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('SVM gaussian with C = {0},sigma = {1}. Accuracy: {2:1.3g}, F1: {3:1.3g}'
-      .format(C,sigma,e,f1))
+print('Linear SVM accuracy with single split C = {0}: {1:1.3g}, F1: {2:1.3g}'.format(C,e,f1))
+
+#%%
+"""
+3B - Linear - Choose C with k-fold crossvalidation
+"""
+
+
+k = 5; # number of folds
+step = 10;
+C_arr = [0.1, 0.5, 1, 5, 10, 100, 1000, 5000, 10000]
+lpts = np.size(C_arr)
+
+prec = np.zeros(lpts,)
+precval = np.zeros(lpts,)
+
+i = 0;
+for C in C_arr:
+    
+    svm = SVC(kernel='linear', C=C)
+    fit = lambda x,y: svm.fit(x,y)
+    
+    prec[i],precval[i] = kfolds(Xtrain,ytrain,fit,predict,error,k)
+    i = i +1;
+    
+    
+# Display the lambda curves
+plt.figure()
+plt.plot(C_arr, prec, label = "Train", alpha = 0.5)
+plt.plot(C_arr, precval, label = "Average validation")
+plt.legend()
+plt.xlabel('$C$')
+plt.ylabel('Error') 
+plt.title(r'Selecting $C$ using k-folds')
+plt.show()
+
+bestCkfolds = C_arr[np.argmin(precval)]
+
+print('Best C with kfolds = : {}'.format(bestCkfolds))
 
 
 #%%
 """
-2 - Choice of C and sigma
+4B - Linear - Model with best lambda with kfolds
 """
 
-# Looking for the best values for C and sigma
-hpvalues = [0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30]
+C = bestCkfolds # regularization factor
+svm = SVC(kernel='linear', C=C)
 
-accuracyval = 0
-accuracyvalg = 0
-f1val = 0
-f1valg = 0
+# Learning curve
+batch = 100;
+fit = lambda x,y: svm.fit(x,y)
+predict = lambda x: svm.predict(x)
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Linear SVM with C = ' + str(C))
+fig.show()
 
-for C in hpvalues :
-    
-    svm = SVC(kernel='linear', C=C)
-    svm.fit(Xtrain,ytrain)
-    
-    pred = svm.predict(Xval)
-    prec = f1score_multi(pred,yval,K)
-    # prec = accuracy(pred,ytest)
-    
-    # Choosing the parameters with the smallest validation error
-    if (prec > f1val) : 
-        accuracyval = accuracy(pred,yval)
-        f1val = prec
-        Cmin = C
-        svmval = svm
-    
-    for sigma in hpvalues :
-        svm = SVC(kernel='rbf', C=C, gamma = 1/(2*sigma**2))
-        svm.fit(Xtrain,ytrain)
-        
-        pred = svm.predict(Xval)
-        prec = f1score_multi(pred,yval,K)
-        # prec = accuracy(pred,ytest)
-        
-        # Choosing the parameters with the smallest validation error
-        if (prec > f1valg) : 
-            accuracyvalg = accuracy(pred,yval)
-            f1valg = prec
-            Cming = C
-            sigmaming = sigma
-            svmvalg = svm
-   
-print("For linear kernel:")         
-print('Results on validation SVM linear with optimum found C = {0}.'.format(Cmin) +
-      'Accuracy: {0:1.3g}, F1: {1:1.3g}'.format(accuracyval,f1val))
 
-pred = svmval.predict(Xtest)
+# Computing precision
+svm.fit(Xtrain,ytrain)
+pred = svm.predict(Xtest)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('SVM linear on test with C = {0}. Accuracy: {1:1.3g}, F1: {2:1.3g}\n'.format(Cmin,e,f1))
+print('Linear SVM accuracy with kfolds C = {0}: {1:1.3g}, F1: {2:1.3g}'.format(C,e,f1))
 
 
-print("For gaussian kernel:")         
-print('Results on validation SVM gaussian with optimum founnd C = {0}, sigma = {1}.'.format(Cming,sigmaming)+
-      'Accuracy: {0:1.3g}, F1: {1:1.3g}'.format(accuracyvalg,f1valg))
 
-pred = svmvalg.predict(Xtest)
+
+#%%
+"""
+5 - Other kernels SVM 
+"""
+
+C = 1 # regularization factor
+gamma = 0.05 # gamma factor
+kernel = 'rbf' # kernel
+svm = SVC(kernel=kernel, C=C, gamma = gamma)
+
+# Plot learning curve.
+batch = 100;
+fit = lambda x,y: svm.fit(x,y)
+predict = lambda x: svm.predict(x)
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for SVM with kernel ' + str(kernel) +
+          ' with parameters C = ' + str(C) + ' and gamma = ' + str(gamma))
+fig.show()
+
+# Computing precision
+svm.fit(Xtrain,ytrain)
+pred = svm.predict(Xtest)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('SVM gaussian on test with C = {0},sigma = {1}. Accuracy: {2:1.3g}, F1: {3:1.3g}'
-      .format(Cming,sigmaming,e,f1))
+print('SVM with kernel ' + str(kernel) + 
+      ' with parameters C = {0}, gamma = {1}'.format(C,gamma) +
+      ', accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
