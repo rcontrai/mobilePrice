@@ -7,7 +7,7 @@ Coursework 3: Multi-class logistical regression and neural networks
 Imports and definitions
 """
 
-from data import carga_csv, polynomial,accuracy,f1score_multi, kfolds, learningcurve
+from data import carga_csv, normalizar, polynomial,accuracy,f1score_multi, kfolds, learningcurve
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
@@ -110,6 +110,10 @@ ytrain = datatrain[:,-1]
 Xtest = datatest[:,:-1]
 ytest = datatest[:,-1]
 
+#Normalization
+Xtrain, muTrain, sigmaTrain = normalizar(Xtrain)
+Xtest = normalizar(Xtest, muTrain, sigmaTrain)
+
 mtrain = np.shape(Xtrain)[0]
 mtest = np.shape(Xtest)[0]
 
@@ -189,7 +193,7 @@ plt.plot(lamb_arr, precval, label = "Validation")
 plt.legend()
 plt.xlabel('$\lambda$')
 plt.ylabel('Error') 
-plt.ylim(0.099,0.179)
+plt.ylim(0.,1)
 plt.title(r'Selecting $\lambda$ using a validation set')
 plt.show()
 
@@ -250,7 +254,7 @@ plt.plot(lamb_arr, precval, label = "Average validation")
 plt.legend()
 plt.xlabel('$\lambda$')
 plt.ylabel('Error') 
-plt.ylim(0.099,0.179)
+plt.ylim(0,1)
 plt.title(r'Selecting $\lambda$ using k-folds')
 plt.show()
 

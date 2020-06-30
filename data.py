@@ -24,17 +24,28 @@ def carga_csv(file_name):
 
 #%% preprocessing
 
-def normalizar(X):
+def normalizar(X,mu=np.array([]),sigma=np.array([])):
     """
     Normalizes the dataset vector X
     and returns the normalized dataset
-    along with the means and the standard deviantion
-    for each feature
+    if pMu and pSigma are not set,this will also return
+    the means and the standard deviantion for each feature
+    input:
+        X : the array containing vectorized examples in its rows
+        mu = np.array([]) : a vector of length n containinig the mean of each feature
+        sigma = np.array([]) : a vector of length n containinig the standard deviation of each feature
     """
-    mu = np.mean(X,  axis=0)
-    sigma = np.std(X, axis=0)
-    X_norm = (X - mu) / sigma
-    return X_norm, mu, sigma
+    if ( (mu.shape[0] == 0) or (sigma.shape[0] == 0)):
+        if( mu.shape[0] != sigma.shape[0]):
+            print("Warning : one of the optional arguments of normalizar was not set")
+        mu = np.mean(X,  axis=0)
+        sigma = np.std(X, axis=0)
+        X_norm = (X - mu) / sigma
+        return X_norm, mu, sigma
+    else:
+        X_norm = (X - mu) / sigma
+        return X_norm
+    
 
 def pca(X):
     """
