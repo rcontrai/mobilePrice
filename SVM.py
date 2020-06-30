@@ -7,7 +7,7 @@ Coursework 6: Support Vector Machines
 Imports and definitions
 """
 
-from data import carga_csv, accuracy,f1score_multi, kfolds, learningcurve
+from data import carga_csv, accuracy,f1score_multi, kfolds, learningcurve, normalizar
 import numpy as np
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
@@ -21,6 +21,10 @@ K = 4  # number of classes
 # loading the data
 datatrain = carga_csv("data/train.csv")
 datatest = carga_csv("data/test.csv")
+
+#Normalization
+datatrain[:,:-1], muTrain, sigmaTrain = normalizar( datatrain[:,:-1])
+datatest[:,:-1] = normalizar(datatest[:,:-1], muTrain, sigmaTrain)
 
 Xtrain = datatrain[:,:-1]
 ytrain = datatrain[:,-1]
@@ -55,7 +59,7 @@ C = 1 # regularization factor
 svm = SVC(kernel='linear', C=C)
 
 # Plot learning curve.
-batch = 100;
+batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for linear SVM, no regularization')
 fig.show()
@@ -76,7 +80,7 @@ print('Linear SVM without regularization accuracy: {0:1.3g}, F1: {1:1.3g}'.forma
 # and compute its error on the training set and on the
 # validation set
 
-C_arr = [0.1, 0.5, 1, 10, 100, 1000, 5000, 10000]
+C_arr = [0.1, 0.5, 1, 10, 100, 1000, 5000]
 lpts = np.size(C_arr)
 
 prec = np.zeros(lpts,)
@@ -118,7 +122,7 @@ C = bestC # regularization factor
 svm = SVC(kernel='linear', C=C)
 
 # Learning curve
-batch = 100;
+batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Linear SVM with C = ' + str(C))
 fig.show()
@@ -138,7 +142,7 @@ print('Linear SVM accuracy with single split C = {0}: {1:1.3g}, F1: {2:1.3g}'.fo
 
 
 k = 5; # number of folds
-C_arr = [0.1, 0.5, 1, 5, 10, 100, 1000, 5000, 10000]
+C_arr = [0.1, 0.5, 1, 5, 10, 100, 1000, 5000]
 lpts = np.size(C_arr)
 
 prec = np.zeros(lpts,)
@@ -177,7 +181,7 @@ C = bestCkfolds # regularization factor
 svm = SVC(kernel='linear', C=C)
 
 # Learning curve
-batch = 100;
+batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Linear SVM with C = ' + str(C))
 fig.show()
@@ -204,7 +208,7 @@ kernel = 'rbf' # kernel
 svm = SVC(kernel=kernel, C=C, gamma = gamma)
 
 # Plot learning curve.
-batch = 100;
+batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for SVM with kernel ' + str(kernel) +
           ' with parameters C = ' + str(C) + ' and gamma = ' + str(gamma))

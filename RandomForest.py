@@ -7,7 +7,7 @@ Random forest
 Imports and definitions
 """
 
-from data import carga_csv, accuracy,f1score_multi, kfolds, learningcurve
+from data import carga_csv, accuracy,f1score_multi, kfolds, learningcurve, normalizar
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier as RFC
 import matplotlib.pyplot as plt
@@ -21,6 +21,10 @@ K = 4  # number of classes
 # loading the data
 datatrain = carga_csv("data/train.csv")
 datatest = carga_csv("data/test.csv")
+
+#Normalization
+datatrain[:,:-1], muTrain, sigmaTrain = normalizar( datatrain[:,:-1])
+datatest[:,:-1] = normalizar(datatest[:,:-1], muTrain, sigmaTrain)
 
 Xtrain = datatrain[:,:-1]
 ytrain = datatrain[:,-1]
