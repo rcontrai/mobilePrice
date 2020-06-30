@@ -135,6 +135,10 @@ ML = MulticlassLogistic();
 predict = lambda x: ML.predict(x) 
 error = lambda p,y: 1 - f1score_multi(p,y,K)
 
+# For plotting 
+ylimin = -0.02
+ylimax = 0.62
+
 #%%
 """
 2 - Multiclass Logistic 
@@ -148,7 +152,7 @@ batch = 10;
 fit = lambda x,y: ML.fit(x,y,K,reg)
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for logistic regression, no regularization')
-plt.ylim(-0.02,0.62)
+plt.ylim(ylimin,ylimax)
 fig.show()
 
 # Computing precision
@@ -212,7 +216,7 @@ reg = bestlamb # regularization factor
 fit = lambda x,y: ML.fit(x,y,K,reg)
 batch = 10
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
-plt.ylim(-0.02,0.62)
+plt.ylim(ylimin,ylimax)
 plt.title('Learning curve for logistic regression with lambda = ' + str(reg))
 fig.show()
 
@@ -274,7 +278,7 @@ reg = bestlambkfolds # regularization factor
 fit = lambda x,y: ML.fit(x,y,K,reg)
 batch = 10
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
-plt.ylim(-0.02,0.62)
+plt.ylim(ylimin,ylimax)
 plt.title('Learning curve for logistic regression with lambda = ' + str(reg))
 fig.show()
 

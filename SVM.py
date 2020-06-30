@@ -50,6 +50,10 @@ fit = lambda x,y: svm.fit(x,y)
 predict = lambda x: svm.predict(x)
 error = lambda p,y: 1 - f1score_multi(p,y,K)
 
+# For plotting 
+ylimin = -0.02
+ylimax = 0.68
+
 #%%
 """
 2 - Linear SVM 
@@ -62,6 +66,7 @@ svm = SVC(kernel='linear', C=C)
 batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for linear SVM, no regularization')
+plt.ylim(ylimin,ylimax)
 fig.show()
 
 # Computing precision
@@ -80,7 +85,7 @@ print('Linear SVM without regularization accuracy: {0:1.3g}, F1: {1:1.3g}'.forma
 # and compute its error on the training set and on the
 # validation set
 
-C_arr = [0.1, 0.5, 1, 10, 100, 1000, 5000]
+C_arr = [0.1, 0.5, 1, 10, 100, 1000, 5000,10000]
 lpts = np.size(C_arr)
 
 prec = np.zeros(lpts,)
@@ -93,10 +98,10 @@ for C in C_arr:
     svm.fit(Xt_notval,yt_notval)
        
     pred = svm.predict(Xt_notval)
-    prec[i-1] = error(pred,yt_notval)
+    prec[i] = error(pred,yt_notval)
     
     pred = svm.predict(Xt_val)
-    precval[i-1] = error(pred,yt_val)
+    precval[i] = error(pred,yt_val)
     i = i+1;
     
 # Display the lambda curve
@@ -125,6 +130,7 @@ svm = SVC(kernel='linear', C=C)
 batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Linear SVM with C = ' + str(C))
+plt.ylim(ylimin,ylimax)
 fig.show()
 
 
@@ -142,7 +148,7 @@ print('Linear SVM accuracy with single split C = {0}: {1:1.3g}, F1: {2:1.3g}'.fo
 
 
 k = 5; # number of folds
-C_arr = [0.1, 0.5, 1, 5, 10, 100, 1000, 5000]
+C_arr = [0.1, 0.5, 1, 5, 10, 100, 1000, 5000,10000]
 lpts = np.size(C_arr)
 
 prec = np.zeros(lpts,)
@@ -184,6 +190,7 @@ svm = SVC(kernel='linear', C=C)
 batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Linear SVM with C = ' + str(C))
+plt.ylim(ylimin,ylimax)
 fig.show()
 
 
@@ -212,6 +219,7 @@ batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Learning curve for SVM with kernel ' + str(kernel) +
           ' with parameters C = ' + str(C) + ' and gamma = ' + str(gamma))
+plt.ylim(ylimin,0.9)
 fig.show()
 
 # Computing precision

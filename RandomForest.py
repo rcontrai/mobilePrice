@@ -50,6 +50,10 @@ fit = lambda x,y: rfc.fit(x,y)
 predict = lambda x: rfc.predict(x)
 error = lambda p,y: 1 - f1score_multi(p,y,K)
 
+# For plotting 
+ylimin = -0.02
+ylimax = 0.71
+
 #%%
 """
 2A - Choose #estimators with single split
@@ -72,10 +76,10 @@ for est in est_arr:
     rfc.fit(Xtrain,ytrain)
        
     pred = rfc.predict(Xt_notval)
-    prec[i-1] = error(pred,yt_notval)
+    prec[i] = error(pred,yt_notval)
     
     pred = rfc.predict(Xt_val)
-    precval[i-1] = error(pred,yt_val)
+    precval[i] = error(pred,yt_val)
     i = i+1;
     
 # Display the lambda curve
@@ -104,6 +108,7 @@ rfc = RFC(n_estimators=est)
 batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Random Forest with #estimators = ' + str(est))
+plt.ylim(ylimin,ylimax)
 fig.show()
 
 
@@ -164,6 +169,7 @@ rfc = RFC(n_estimators=est)
 batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.title('Random Forest with #estimators = ' + str(est))
+plt.ylim(ylimin,ylimax)
 fig.show()
 
 
