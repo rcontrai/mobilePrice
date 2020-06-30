@@ -105,14 +105,14 @@ K = 4  # number of classes
 datatrain = carga_csv("data/train.csv")
 datatest = carga_csv("data/test.csv")
 
+#Normalization
+datatrain[:,:-1], muTrain, sigmaTrain = normalizar( datatrain[:,:-1])
+datatest[:,:-1] = normalizar(datatest[:,:-1], muTrain, sigmaTrain)
+
 Xtrain = datatrain[:,:-1]
 ytrain = datatrain[:,-1]
 Xtest = datatest[:,:-1]
 ytest = datatest[:,-1]
-
-#Normalization
-Xtrain, muTrain, sigmaTrain = normalizar(Xtrain)
-Xtest = normalizar(Xtest, muTrain, sigmaTrain)
 
 mtrain = np.shape(Xtrain)[0]
 mtest = np.shape(Xtest)[0]
@@ -180,10 +180,10 @@ for lamb in lamb_arr:
     ML.fit(Xt_notval,yt_notval,K,lamb)
        
     pred = ML.predict(Xt_notval)
-    prec[i-1] = error(pred,yt_notval)
+    prec[i] = error(pred,yt_notval)
     
     pred = ML.predict(Xt_val)
-    precval[i-1] = error(pred,yt_val)
+    precval[i] = error(pred,yt_val)
     i = i+1;
     
 # Display the lambda curve
