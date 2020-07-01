@@ -1,7 +1,9 @@
 from data import *
 import matplotlib.pyplot as plt
 
-data = carga_csv("data/train.csv")
+datatrain = carga_csv("data/train.csv")
+datatest = carga_csv("data/test.csv")
+data = np.concatenate((datatrain,datatest), axis=0)
 X = data[:,:-1]
 Y = data[:,-1]
 m = np.shape(X)[0]
