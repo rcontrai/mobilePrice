@@ -65,7 +65,7 @@ svm = SVC(kernel='linear', C=C)
 # Plot learning curve.
 batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
-plt.title('Learning curve for linear SVM, no regularization')
+plt.title('Learning curve for linear SVM, C = 1')
 plt.ylim(ylimin,ylimax)
 fig.show()
 
@@ -74,7 +74,7 @@ svm.fit(Xtrain,ytrain)
 pred = svm.predict(Xtest)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('Linear SVM without regularization accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
+print('Linear SVM with C = 1 accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
 
 #%%
 """
