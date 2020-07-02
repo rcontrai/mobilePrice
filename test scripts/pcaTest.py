@@ -18,10 +18,11 @@ Xpca = Xnorm.dot(U)
 datanorm,_,_ = normalizar(data)
 U2, S2 = pca(datanorm)
 Xpca2 = Xnorm.dot(U2[:-1])
+Xpca2,_,_ = normalizar(Xpca2)
 
 #2D scatter plot of the principal components
 fig = scatterPlot(Xpca,Y,(5,9))
-plt.title("The first 2 principal components")
+plt.title("two principal components")
 fig.show()
 
 #2D scatter plot of the unlabeled data projected onto some components of the labeled data
@@ -31,7 +32,7 @@ fig.show()
 
 #3D scatter plot
 fig = scatterPlot(Xpca,Y,(5,9,12))
-plt.title("The first 3 principal components")
+plt.title("three principal components")
 fig.show()
 
 #analyze information loss
