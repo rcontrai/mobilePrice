@@ -236,12 +236,12 @@ yt_val = datatrain[split::,-1]
 error = lambda p,y: 1 - f1score_multi(p,y,K)
 
 # For plotting 
-ylimin = 0   #boundaries for the learning curves
-ylimax = 1
+ylimin = -0.01   #boundaries for the learning curves
+ylimax = 0.71
 lamblimin = 0  #boundaries for the lambda curves
-lamblimax = 1
+lamblimax = 0.265
 barlimin = 0  # boundaries for the hidden layer size curves
-barlimax = 0.07
+barlimax = 0.065
 
 #%% Testing the algoritms on a simple hypothesis
 """
@@ -280,7 +280,7 @@ print('Neural network with {0} hidden neurons and no regularization accuracy: {1
 # and compute their error on the training set and on the
 # validation set
 
-lamb_arr = np.append(0,np.logspace(0,2.35,num=30))
+lamb_arr = np.append(0,np.logspace(-0.5,1.5,9))
 h_list = [1,2,4,8,12,16] #range of sizes for the hidden layer
 nmodels = len(h_list)
 nn_list = [] #list of neural networks with different architectures
@@ -378,7 +378,7 @@ print('Neural network accuracy with single split lambda = {0:1.3g}, h = {3}: {1:
 
 k = 5 # number of folds
 
-lamb_arr = np.append(0,np.logspace(0,2.35,num=30))
+lamb_arr = np.append(0,np.logspace(-0.5,1.5,9))
 h_list = [1,2,4,8,12,16] #range of sizes for the hidden layer
 nmodels = len(h_list)
 nn_list = [] #list of neural networks with different architectures
