@@ -7,7 +7,7 @@ Coursework 4: Neural network training
 Imports and definitions
 """
 
-from data import carga_csv, normalizar, learningcurve, f1score_multi, accuracy
+from data import carga_csv, normalizar, f1score_multi, accuracy, learningcurve, kfolds
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
@@ -236,8 +236,12 @@ yt_val = datatrain[split::,-1]
 error = lambda p,y: 1 - f1score_multi(p,y,K)
 
 # For plotting 
-ylimin = -0.02
-ylimax = 1.02
+ylimin = 0   #boundaries for the learning curves
+ylimax = 1
+lamblimin = 0  #boundaries for the lambda curves
+lamblimax = 1
+barlimin = 0  # boundaries for the hidden layer size curves
+barlimax = 0.07
 
 #%% Testing the algoritms on a simple hypothesis
 """
@@ -245,7 +249,7 @@ ylimax = 1.02
 """
 
 reg = 0 # regularization factor
-h = 4 # size of the hidden layer
+h = 4# size of the hidden layer
 
 # Initialize the network
 NN = NeuralNetwork(n,h,K)
@@ -269,6 +273,189 @@ print('Neural network with {0} hidden neurons and no regularization accuracy: {1
 
 #%% Seaching for the best hypothesis with a single split
 """
-3 - Seaching for the best hypothesis with a single split
+3A - Seaching for the best hypothesis with a single split
 """
 
+# Train models for a range of values of lambda and h
+# and compute their error on the training set and on the
+# validation set
+
+lamb_arr = np.append(0,np.logspace(0,2.35,num=30))
+h_list = [1,2,4,8,12,16] #range of sizes for the hidden layer
+nmodels = len(h_list)
+nn_list = [] #list of neural networks with different architectures
+for h in h_list:
+    nn_list.append(NeuralNetwork(n,h,K))
+    
+prec = np.zeros((nmodels,lamb_arr.shape[0])) #model precision on the training set
+precval = np.zeros_like(prec)   #model precision on the validation set
+
+j = 0
+for NN in nn_list:
+    i=0
+    for lamb in lamb_arr:
+        NN.fit(Xt_notval,yt_notval,lamb)
+        
+        pred = NN.predict(Xt_notval)
+        prec[j][i] = error(pred,yt_notval)
+        
+        pred = NN.predict(Xt_val)
+        precval[j][i] = error(pred,yt_val)
+        i += 1
+    j += 1
+
+#get the results
+bestIndices = np.argmin(precval,axis=1)
+bestPrecvals = np.zeros(nmodels)
+bestPrecs = np.zeros(nmodels)
+for j in range(nmodels):
+    bestPrecvals[j] = precval[j][bestIndices[j]]
+    bestPrecs[j] = prec[j][bestIndices[j]]
+
+bestJ = np.argmin(bestPrecvals) # index of the best model
+besth = h_list[bestJ]
+bestNN = nn_list[bestJ]
+bestlamb = lamb_arr[bestIndices][bestJ]
+
+# Display the lambda curve for the best hypothesis
+plt.figure()
+plt.plot(lamb_arr, prec[bestJ], label = "Train", alpha = 0.8)
+plt.plot(lamb_arr, precval[bestJ], label = "Validation")
+plt.legend()
+plt.xlabel('$\lambda$')
+plt.ylabel('Error') 
+plt.ylim(lamblimin,lamblimax)
+plt.title(r'Selecting $\lambda$ using a validation set for h=' + str(besth))
+plt.show()
+
+# Compare the results of the hypotheses
+plt.figure()
+plt.bar(h_list, bestPrecs, label = "Train", width = -0.4, align = 'edge')
+plt.bar(h_list, bestPrecvals, label = "Validation", width = 0.4, align = 'edge')
+plt.legend()
+plt.xlabel('Size of hidden layer')
+plt.ylabel('Best error')
+plt.ylim(barlimin,barlimax)
+plt.title('Selecting h using a validation set')
+plt.show()
+
+print('Best lambda with a single split = : {}'.format(bestlamb))
+print('Best number of hidden neurons with a single split = : {}'.format(besth))
+
+#%% Model with best hypothesis and lambda found with a single split
+"""
+3B - Model with best hypothesis and lambda found with a single split
+"""
+
+reg = bestlamb # regularization factor
+
+# Learning curve
+fit = lambda x,y: bestNN.fit(x,y,reg)
+predict = lambda x: bestNN.predict(x) 
+batch = 10
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.ylim(ylimin,ylimax)
+plt.title('Learning curve for neural network, {0} hidden neurons, lambda = {1:1.3g}'.format(h,reg))
+fig.show()
+
+
+# Computing precision
+bestNN.fit(Xtrain,ytrain,reg)
+pred = bestNN.predict(Xtest)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('Neural network accuracy with single split lambda = {0:1.3g}, h = {3}: {1:1.3g}, F1: {2:1.3g}'.format(reg,e,f1,besth))
+
+
+#%% Seaching for the best hypothesis with k-fold crossvalidation
+"""
+3A - Seaching for the best hypothesis with k-fold crossvalidation
+"""
+
+# Train models for a range of values of lambda and h
+# and compute their average error on several pairs of
+# training and validation sets
+
+k = 5 # number of folds
+
+lamb_arr = np.append(0,np.logspace(0,2.35,num=30))
+h_list = [1,2,4,8,12,16] #range of sizes for the hidden layer
+nmodels = len(h_list)
+nn_list = [] #list of neural networks with different architectures
+for h in h_list:
+    nn_list.append(NeuralNetwork(n,h,K))
+    
+prec = np.zeros((nmodels,lamb_arr.shape[0])) #model precision on the training set
+precval = np.zeros_like(prec)   #model precision on the validation set
+
+j = 0
+for NN in nn_list:
+    i=0
+    for lamb in lamb_arr:
+        fit = lambda x,y : NN.fit(x,y,lamb)
+        predict = lambda x : NN.predict(x)
+        prec[j][i], precval[j][i] = kfolds(Xtrain,ytrain,fit,predict,error,k)
+        i += 1
+    j += 1
+
+#get the results
+bestIndices = np.argmin(precval,axis=1)
+bestPrecvals = np.zeros(nmodels)
+bestPrecs = np.zeros(nmodels)
+for j in range(nmodels):
+    bestPrecvals[j] = precval[j][bestIndices[j]]
+    bestPrecs[j] = prec[j][bestIndices[j]]
+
+bestJ = np.argmin(bestPrecvals) # index of the best hypothesis
+besth = h_list[bestJ]
+bestNN = nn_list[bestJ]
+bestlamb = lamb_arr[bestIndices][bestJ]
+
+# Display the lambda curve for the best hypothesis
+plt.figure()
+plt.plot(lamb_arr, prec[bestJ], label = "Train", alpha = 0.8)
+plt.plot(lamb_arr, precval[bestJ], label = "Average validation")
+plt.legend()
+plt.xlabel('$\lambda$')
+plt.ylabel('Error') 
+plt.ylim(lamblimin,lamblimax)
+plt.title(r'Selecting $\lambda$ using k-fold crossvalidation for h=' + str(besth))
+plt.show()
+
+# Compare the results of the hypotheses
+plt.figure()
+plt.bar(h_list, bestPrecs, label = "Train", width = -0.4, align = 'edge')
+plt.bar(h_list, bestPrecvals, label = "Average validation", width = 0.4, align = 'edge')
+plt.legend()
+plt.xlabel('Size of hidden layer')
+plt.ylabel('Best error')
+plt.ylim(barlimin,barlimax)
+plt.title('Selecting h using k-fold crossvalidation')
+plt.show()
+
+print('Best lambda with kfolds = : {}'.format(bestlamb))
+print('Best number of hidden neurons with kfolds = : {}'.format(besth))
+
+#%% Model with best hypothesis and lambda found with kfolds
+"""
+3B - Model with best hypothesis and lambda found with kfolds
+"""
+
+reg = bestlamb # regularization factor
+
+# Learning curve
+fit = lambda x,y: bestNN.fit(x,y,reg)
+predict = lambda x: bestNN.predict(x) 
+batch = 10
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.ylim(ylimin,ylimax)
+plt.title('Learning curve for neural network, {0} hidden neurons, lambda = {1:1.2g}'.format(h,reg))
+fig.show()
+
+
+# Computing precision
+bestNN.fit(Xtrain,ytrain,reg)
+pred = bestNN.predict(Xtest)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('Neural network accuracy with with kfolds lambda = {0:1.3g}, h = {3}: {1:1.3g}, F1: {2:1.3g}'.format(reg,e,f1,besth))
