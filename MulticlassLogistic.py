@@ -296,29 +296,31 @@ print('Logistical model accuracy with kfolds lambda = {0}: {1:1.3g}, F1: {2:1.3g
 """
 
 batch = 10;
-reg = 10000;
+reg = 0;
 
 d = 2;
+inter_only = False
 
 # Polynomial transformations
-Xtrain_pol, mu, sigma = polynomial(Xtrain,d)
-Xt_notval_pol, mu_notval, sigma_notval = polynomial(Xt_notval,d)
-Xt_val_pol, _, _ = polynomial(Xt_val,d)
-Xtest_pol, _, _ = polynomial(Xtest,d)
+Xtrain_pol = polynomial(Xtrain,d, inter_only)
+Xtest_pol = polynomial(Xtest,d, inter_only)
 
-Xtrain_pol = Xtrain_pol[:,1:]
-Xt_notval_pol = Xt_notval_pol[:,1:]
-Xt_val_pol = Xt_val_pol[:,1:]
-Xtest_pol = Xtest_pol[:,1:]
+# Normalize
+Xtrain_pol, muTrain_pol, sigmaTrain_pol = normalizar(Xtrain_pol)
+Xtest_pol = normalizar(Xtest_pol, muTrain_pol, sigmaTrain_pol)
 
-Xt_val_pol = (Xt_val_pol - mu_notval) / sigma_notval
-Xtest_pol = (Xtest_pol - mu) / sigma
+# Single split in validation and not validation
+Xt_notval_pol = Xtrain_pol[0:split,:]
+Xt_val_pol = Xtrain_pol[split::,:]
 
+# For plotting 
+ylimin = -0.02
+ylimax = 0.7
 
 # Learning curve
 fit = lambda x,y: ML.fit(x,y,K,reg)
 fig = learningcurve(Xt_notval_pol,yt_notval,Xt_val_pol,yt_val,fit,predict,error,batch)
-plt.title('Learning curve for logistic regression with polynomial features')
+plt.title('Learning curve for logistic regression with d = {0} without regularisation'.format(d))
 fig.show()
 
 
@@ -327,4 +329,134 @@ ML.fit(Xtrain_pol,ytrain,K,reg)
 pred = ML.predict(Xtest_pol)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('Logistical model with plynomial features accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
+print('Logistical model with d = {0} without regularisation accuracy: {1:1.3g}, F1: {2:1.3g}'.format(d,e,f1))
+
+#%%
+"""
+6A - Choose lambda with single split
+"""
+
+# Train the model for a range of values of lambda
+# and compute its error on the training set and on the
+# validation set
+
+step = 10;
+lamb_arr = range(0,1000,step)
+lpts = np.size(lamb_arr)
+
+prec = np.zeros(lpts,)
+precval = np.zeros(lpts,)
+
+i = 0;
+for lamb in lamb_arr:
+
+    ML.fit(Xt_notval_pol,yt_notval,K,lamb)
+       
+    pred = ML.predict(Xt_notval_pol)
+    prec[i] = error(pred,yt_notval)
+    
+    pred = ML.predict(Xt_val_pol)
+    precval[i] = error(pred,yt_val)
+    i = i+1;
+    
+# Display the lambda curve
+plt.figure()
+plt.plot(lamb_arr, prec, label = "Train", alpha = 0.5)
+plt.plot(lamb_arr, precval, label = "Validation")
+plt.legend()
+plt.xlabel('$\lambda$')
+plt.ylabel('Error') 
+plt.ylim(0.,1)
+plt.title(r'Selecting $\lambda$ using a validation set')
+plt.show()
+
+bestlamb = np.argmin(precval)*step
+
+print('Best lambda with single split = : {}'.format(bestlamb))
+
+#%%
+"""
+7A - Model with best lambda with single split
+"""
+
+reg = bestlamb # regularization factor
+
+# Learning curve
+fit = lambda x,y: ML.fit(x,y,K,reg)
+batch = 10
+fig = learningcurve(Xt_notval_pol,yt_notval,Xt_val_pol,yt_val,fit,predict,error,batch)
+plt.ylim(ylimin,ylimax)
+plt.title('Learning curve for logistic regression with d ={0}, lambda = {1}'.format(d,reg))
+fig.show()
+
+
+# Computing precision
+ML.fit(Xtrain_pol,ytrain,K,reg)
+pred = ML.predict(Xtest_pol)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('Logistical model accuracy with d = {0} and single split lambda = {1}:'.format(d,reg) +
+      '{0:1.3g}, F1: {1:1.3g}'.format(e,f1))
+
+#%%
+"""
+6B - Choose lambda with k-fold crossvalidation
+"""
+
+
+k = 5; # number of folds
+step = 10;
+lamb_arr = range(0,1000,step)
+lpts = np.size(lamb_arr)
+
+prec = np.zeros(lpts,)
+precval = np.zeros(lpts,)
+
+i = 0;
+for lamb in lamb_arr:
+
+    fit = lambda x,y: ML.fit(x,y,K,lamb)
+    
+    prec[i],precval[i] = kfolds(Xtrain_pol,ytrain,fit,predict,error,k)
+    i = i +1;
+    
+    
+# Display the lambda curves
+plt.figure()
+plt.plot(lamb_arr, prec, label = "Train", alpha = 0.5)
+plt.plot(lamb_arr, precval, label = "Average validation")
+plt.legend()
+plt.xlabel('$\lambda$')
+plt.ylabel('Error') 
+plt.ylim(0,1)
+plt.title(r'Selecting $\lambda$ using k-folds')
+plt.show()
+
+bestlambkfolds = np.argmin(precval)*step
+
+print('Best lambda with kfolds = : {}'.format(bestlambkfolds))
+
+
+#%%
+"""
+7B - Model with best lambda with kfolds
+"""
+
+reg = bestlambkfolds # regularization factor
+
+# Learning curve
+fit = lambda x,y: ML.fit(x,y,K,reg)
+batch = 10
+fig = learningcurve(Xt_notval_pol,yt_notval,Xt_val_pol,yt_val,fit,predict,error,batch)
+plt.ylim(ylimin,ylimax)
+plt.title('Learning curve for logistic regression with d ={0}, lambda = {1}'.format(d,reg))
+fig.show()
+
+
+# Computing precision
+ML.fit(Xtrain_pol,ytrain,K,reg)
+pred = ML.predict(Xtest_pol)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('Logistical model accuracy with d = {0} and kfolds lambda = {1}:'.format(d,reg) +
+      '{0:1.3g}, F1: {1:1.3g}'.format(e,f1))

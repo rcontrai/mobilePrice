@@ -64,15 +64,13 @@ def pca(X):
     return U,S
 
 
-def polynomial(X,grad):
+def polynomial(X,grad,inter_only):
     """
     Computes each power of X's values from 0 to grad
-    and then normalizes them.
     """
-    poly = PolynomialFeatures(grad)
+    poly = PolynomialFeatures(grad,interaction_only=inter_only,include_bias=False)
     X_pol = poly.fit_transform(X)
-    X_pol[:,1:], mu, sigma = normalizar(X_pol[:,1:])
-    return X_pol, mu, sigma
+    return X_pol
     
 
 #%% visualization and metrics
