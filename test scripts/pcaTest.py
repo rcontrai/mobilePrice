@@ -13,6 +13,7 @@ n = np.shape(X)[1]
 Xnorm,_,_ = normalizar(X)
 U,S = pca(Xnorm)
 Xpca = Xnorm.dot(U)
+Xpca, _, _ = normalizar(Xpca)
 
 #Do principal component analysis on the labeled data, then project the unlabeled data onto those components
 datanorm,_,_ = normalizar(data)
@@ -26,8 +27,10 @@ plt.title("two principal components")
 fig.show()
 
 #2D scatter plot of the unlabeled data projected onto some components of the labeled data
-fig = scatterPlot(Xpca2,Y,(0,20))
+fig = scatterPlot(Xpca2,Y,(20,0))
 plt.title("two functions correlated with the class information")
+plt.xlabel("projection #20")
+plt.ylabel("projection #0")
 fig.show()
 
 #3D scatter plot
@@ -50,7 +53,7 @@ plt.show()
 Ynorm,_,_ = normalizar(Y)
 plt.figure()
 plt.bar(range(n), Ynorm.dot(Xnorm)/m)
-plt.ylim(-1,1)
+plt.ylim(-0.05,1)
 plt.title("Correlation of class with the initial features")
 plt.show()
 plt.figure()

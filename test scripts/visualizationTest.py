@@ -8,7 +8,7 @@ X = data[:,:-1]
 Y = data[:,-1]
 
 #2D scatter plot
-fig = scatterPlot(X,Y,(13,12))
+fig = scatterPlot(X,Y,(13,0))
 plt.title("2D plot of 2 features")
 fig.show()
 
