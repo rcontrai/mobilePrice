@@ -81,7 +81,7 @@ print('Linear SVM with C = 1 accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
 3A - Linear - Choose C with single split
 """
 
-# Train the model for a range of values of lambda
+# Train the model for a range of values of C
 # and compute its error on the training set and on the
 # validation set
 
@@ -104,7 +104,7 @@ for C in C_arr:
     precval[i] = error(pred,yt_val)
     i = i+1;
     
-# Display the lambda curve
+# Display the C curve
 plt.figure()
 plt.plot(C_arr, prec, label = "Train", alpha = 0.5)
 plt.plot(C_arr, precval, label = "Validation")
@@ -163,7 +163,7 @@ for C in C_arr:
     i = i +1;
     
     
-# Display the lambda curves
+# Display the C curves
 plt.figure()
 plt.plot(C_arr, prec, label = "Train", alpha = 0.5)
 plt.plot(C_arr, precval, label = "Average validation")
@@ -180,7 +180,7 @@ print('Best C with kfolds = : {}'.format(bestCkfolds))
 
 #%%
 """
-4B - Linear - Model with best lambda with kfolds
+4B - Linear - Model with best C with kfolds
 """
 
 C = bestCkfolds # regularization factor
@@ -206,18 +206,17 @@ print('Linear SVM accuracy with kfolds C = {0}: {1:1.3g}, F1: {2:1.3g}'.format(C
 
 #%%
 """
-5 - Other kernels SVM 
+5 - Gaussian kernel SVM 
 """
 
 C = 1 # regularization factor
 gamma = 0.05 # gamma factor
-kernel = 'rbf' # kernel
-svm = SVC(kernel=kernel, C=C, gamma = gamma)
+svm = SVC(kernel='rbf', C=C, gamma = gamma)
 
 # Plot learning curve.
 batch = 10;
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
-plt.title('Learning curve for SVM with kernel ' + str(kernel) +
+plt.title('Learning curve for SVM with gaussian kernel' +
           ' with parameters C = ' + str(C) + ' and gamma = ' + str(gamma))
 plt.ylim(ylimin,0.9)
 fig.show()
@@ -227,6 +226,120 @@ svm.fit(Xtrain,ytrain)
 pred = svm.predict(Xtest)
 f1 = f1score_multi(pred,ytest,K)
 e = accuracy(pred,ytest)
-print('SVM with kernel ' + str(kernel) + 
+print('SVM with gaussian kernel ' +
       ' with parameters C = {0}, gamma = {1}'.format(C,gamma) +
+      ', accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
+
+#%%
+"""
+6A - Gaussian - Choose C and gamma with single split
+"""
+
+# Train the model for a range of values of C
+# and compute its error on the training set and on the
+# validation set
+
+C_arr = [0.1, 0.5, 1, 10, 100, 1000, 5000,10000]
+gamma_arr = [0.01, 0.1, 1, 10, 100, 1000]
+
+
+errmin = float('Inf')
+for C in C_arr:
+    for gamma in gamma_arr:
+    
+        svm = SVC(kernel='linear', C=C)
+        svm.fit(Xt_notval,yt_notval)
+        
+        pred = svm.predict(Xt_val)
+        err = error(pred,yt_val)
+        if err < errmin:
+            errmin = err
+            Cmin = C
+            gammamin = gamma
+    
+gbestC = Cmin
+gbestgamma = gammamin
+
+print('Best C, gamma with single split = : {0},{1}'.format(gbestC,gbestgamma))
+
+#%%
+"""
+7A - Gaussian - Model with best C and gamma with single split
+"""
+
+C = gbestC # regularization factor
+gamma = gbestgamma # gamma of the kernel
+svm = SVC(kernel='rbf', C=C, gamma = gamma)
+
+# Plot learning curve.
+batch = 10;
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for SVM with gaussian kernel' +
+          ' with parameters C = ' + str(C) + ' and gamma = ' + str(gamma))
+plt.ylim(ylimin,0.9)
+fig.show()
+
+# Computing precision
+svm.fit(Xtrain,ytrain)
+pred = svm.predict(Xtest)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('SVM with gaussian kernel ' +
+      ' with single split parameters C = {0}, gamma = {1}'.format(C,gamma) +
+      ', accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
+
+#%%
+"""
+6B - Gaussian - Choose C and gamma with k-fold crossvalidation
+"""
+
+
+k = 5; # number of folds
+C_arr = [0.1, 0.5, 1, 5, 10, 100, 1000, 5000,10000]
+gamma_arr = [0.01, 0.1, 1, 10, 100, 1000]
+
+
+errmin = float('Inf')
+for C in C_arr:
+    for gamma in gamma_arr:
+    
+        svm = SVC(kernel='rbf', C=C, gamma = gamma)
+        
+        _,err = kfolds(Xtrain,ytrain,fit,predict,error,k)
+        if err < errmin:
+            errmin = err
+            Cmin = C
+            gammamin = gamma
+
+gbestCkfolds = Cmin
+gbestgammakfolds = gammamin
+
+
+print('Best C, gamma with kfolds = : {0},{1}'.format(gbestCkfolds,gbestgammakfolds))
+
+
+#%%
+"""
+7B - Gaussian - Model with best C and gamma with single split
+"""
+
+C = gbestCkfolds # regularization factor
+gamma = gbestgammakfolds # gamma of the kernel
+svm = SVC(kernel='rbf', C=C, gamma = gamma)
+
+# Plot learning curve.
+batch = 10;
+fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
+plt.title('Learning curve for SVM with gaussian kernel' +
+          ' with parameters C = ' + str(C) + ' and gamma = ' + str(gamma))
+plt.ylim(ylimin,0.9)
+fig.show()
+
+# Computing precision
+svm.fit(Xtrain,ytrain)
+pred = svm.predict(Xtest)
+f1 = f1score_multi(pred,ytest,K)
+e = accuracy(pred,ytest)
+print('SVM with gaussian kernel ' +
+      ' with kfolds parameters C = {0}, gamma = {1}'.format(C,gamma) +
       ', accuracy: {0:1.3g}, F1: {1:1.3g}'.format(e,f1))
