@@ -19,14 +19,6 @@ def sigmoid(z):
     """
     return 1 / (1 + np.exp(-z))
 
-def sigmoid_prime(z):
-    """
-    derivative of a sigmoid function
-    can be applied on numbers and on numpy arrays of any dimensions
-    """
-    gz = sigmoid(z)
-    return gz*(1-gz)
-
 def propagation(theta1,theta2,X):
     """
     forward propagation function
@@ -127,19 +119,6 @@ def pesosAleatorios(L_in, L_out) :
     theta = np.random.rand(L_out, L_in + 1)
     theta = (theta - 0.5)*2*eps
     return theta
-    
-def precision_neur(theta1,theta2,X,Y):
-    """
-    accuracy function
-    computes the accuracy of the neural network described by theta1 and theta2
-    on dataset X with true target variable Y
-    """
-    m = np.shape(X)[0]
-    X_new = np.hstack([np.ones([m,1]),X])
-    H,_ = propagation(theta1,theta2,X_new)
-    labels = np.argmax(H,axis = 1)
-    Y = Y.ravel()
-    return np.sum(labels == Y)/m
     
 class NeuralNetwork:
     
