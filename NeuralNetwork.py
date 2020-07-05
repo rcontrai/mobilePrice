@@ -449,7 +449,7 @@ predict = lambda x: bestNN.predict(x)
 batch = 10
 fig = learningcurve(Xt_notval,yt_notval,Xt_val,yt_val,fit,predict,error,batch)
 plt.ylim(ylimin,ylimax)
-plt.title('Learning curve for neural network, {0} hidden neurons, lambda = {1:1.2g}'.format(h,reg))
+plt.title('Learning curve for neural network, {0} hidden neurons, lambda = {1:1.2g}'.format(besth,reg))
 fig.show()
 
 
